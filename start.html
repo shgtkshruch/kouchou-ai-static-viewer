@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>広聴AI Local Viewer</title>
+</head>
+<body>
+  <h1>広聴AI Local Viewer</h1>
+  <p>広聴AIから出力されたフォルダを選択してください。</p>
+  <button id="selectDir">フォルダを選択</button>
+
+  <script>
+    const CACHE_NAME = 'next-export-dynamic-cache';
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').then(() => {
+        console.log('✅ Service Worker registered');
+      });
+    }
+
+    document.getElementById('selectDir').addEventListener('click', async () => {
+      if (!('showDirectoryPicker' in window)) {
+        alert('File System Access API をサポートしていないブラウザです。Chromeを使用してください。');
+        return;
+      }
+
+      const dirHandle = await window.showDirectoryPicker();
+      const files = [];
+
+      async function recursivelyCollectFiles(handle, path = '') {
+        for await (const entry of handle.values()) {
+          const entryPath = path ? `${path}/${entry.name}` : entry.name;
+          if (entry.kind === 'file') {
+            const file = await entry.getFile();
+            files.push({ path: '/' + entryPath, file });
+          } else if (entry.kind === 'directory') {
+            await recursivelyCollectFiles(entry, entryPath);
+          }
+        }
+      }
+
+      await recursivelyCollectFiles(dirHandle);
+
+      const registration = await navigator.serviceWorker.ready;
+      const sw = registration.active;
+
+      for (const { path, file } of files) {
+        const arrayBuffer = await file.arrayBuffer();
+        sw.postMessage({
+          type: 'CACHE_FILE',
+          path,
+          buffer: arrayBuffer,
+          mimeType: file.type || 'application/octet-stream',
+        });
+      }
+
+      alert('📦 キャッシュ完了！ページをリロードしてアプリを起動できます。');
+    });
+  </script>
+</body>
+</html>
