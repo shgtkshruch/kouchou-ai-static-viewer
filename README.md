@@ -1,2 +1,2 @@
 # kouchou-ai-static-hosting
-View static exported kouchou ai pages with Chrome using Service Worker
+View statically exported Kouchou AI pages in a web browser using a Service Worker.
