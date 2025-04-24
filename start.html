@@ -54,7 +54,9 @@
         });
       }
 
-      alert('📦 キャッシュ完了！ページをリロードしてアプリを起動できます。');
+      console.log('📦 キャッシュ完了！index.html にリダイレクトします。');
+      // トップページを表示する
+      window.location.href = '/index.html';
     });
   </script>
 </body>
